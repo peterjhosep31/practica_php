@@ -2,6 +2,8 @@
 include('../templates/header.php');
 include('../config/dataBase.php');
 
+$btnForm = "";
+
 if ($_POST) {
   $txtIdBoock = (isset($_POST['txtId'])) ? $_POST['txtId'] : "";
   $txtTitleBoock = (isset($_POST['txtTitle'])) ? $_POST['txtTitle'] : "";
@@ -31,6 +33,8 @@ if (isset($btnForm)) {
 
       $insertSentencesBoock->bindParam(":imageBoock", $nameImage);
       $insertSentencesBoock->execute();
+
+      header('Location:product.php');
       break;
     case 'updateBoock':
       $updateSentenceBoock = $conection->prepare("UPDATE boock SET title_boock= :titleBoock, author_boock= :authorBoock WHERE id_boock = :idBoock");
@@ -41,19 +45,20 @@ if (isset($btnForm)) {
 
       if ($image != "") {
         $selectImageBoock = $conection->prepare("SELECT image_boock FROM boock WHERE id_boock= :idBoock");
-        $selectImageBoock->bindColumn(':idBoock', $txtIdBoock);
+        $selectImageBoock->bindParam(':idBoock', $txtIdBoock);
         $selectImageBoock->execute();
         $boockImage = $selectImageBoock->fetch(PDO::FETCH_LAZY);
 
         if (isset($boockImage['image_boock']) && $boockImage['image_boock'] != 'default.pgn') {
-          if (file_exists('../../images/'.$boockImage['image_boock'])){
+          if (file_exists('../../images/' . $boockImage['image_boock'])) {
             unlink('../../images/' . $boockImage['image_boock']);
           }
         }
 
         $date = new DateTime();
-        $nameImage = ($image != "") ? $date->getTimestamp()."_".$_FILES['img']['name'] : "default.pgn";
+        $nameImage = ($image != "") ? $date->getTimestamp() . "_" . $_FILES['img']['name'] : "default.pgn";
         $imageTemporary = $_FILES['img']['tmp_name'];
+        move_uploaded_file($imageTemporary, '../../images/' . $nameImage);
 
 
         $updateSentenceBoock = $conection->prepare("UPDATE boock SET image_boock= :imageBoock WHERE id_boock = :idBoock");
@@ -61,9 +66,11 @@ if (isset($btnForm)) {
         $updateSentenceBoock->bindParam(':idBoock', $txtIdBoock);
         $updateSentenceBoock->execute();
       }
+
+      header('Location:product.php');
       break;
     case 'cancel':
-      echo "siiiiii";
+      header('Location:product.php');
       break;
 
     case 'select':
@@ -93,6 +100,11 @@ if (isset($btnForm)) {
           $deleteSentenceBoock->execute();
         }
       }
+
+      header('Location:product.php');
+      break;
+
+    case "":
       break;
 
     default:
@@ -120,24 +132,25 @@ $boocksDataBase = $selectSentencesBoocks->fetchAll(PDO::FETCH_ASSOC);
 
         <div class="form-group">
           <label for="txtId">Id libro:</label>
-          <input type="text" class="form-control" name="txtId" <?php if ($btnForm != 'delete') { ?> <?php if (isset($txtIdBoock)) { ?> readonly value="<?php echo $txtIdBoock; ?>" <?php } else { ?> value="" <?php } ?> <?php } ?> id=" txtId" aria-describedby="emailHelp" placeholder="ID">
+          <input type="text" class="form-control" name="txtId" <?php if ($btnForm != 'delete') { ?> <?php if (isset($txtIdBoock)) { ?> readonly value="<?php echo $txtIdBoock; ?>" <?php } else { ?> value="" <?php } ?> <?php } ?> id=" txtId" aria-describedby="emailHelp" required placeholder="ID">
         </div>
 
         <div class="form-group">
           <label for="txtTitle">Titulo:</label>
-          <input type="text" class="form-control" name="txtTitle" <?php if (isset($txtTitleBoock)) { ?> value="<?php echo $txtTitleBoock; ?>" <?php } else { ?> value="" <?php } ?> id="txtTitle" aria-describedby="emailHelp" placeholder="Titulo">
+          <input type="text" class="form-control" name="txtTitle" <?php if (isset($txtTitleBoock)) { ?> value="<?php echo $txtTitleBoock; ?>" <?php } else { ?> value="" <?php } ?> id="txtTitle" aria-describedby="emailHelp" required placeholder="Titulo">
         </div>
 
         <div class="form-group">
           <label for="txtAutor">Autor:</label>
-          <input type="text" class="form-control" name="txtAutor" <?php if (isset($txtAuthorBoock)) { ?> value="<?php echo $txtAuthorBoock; ?>" <?php } else { ?> value="" <?php } ?> id="txtAutor" aria-describedby="emailHelp" placeholder="Autor">
+          <input type="text" class="form-control" name="txtAutor" <?php if (isset($txtAuthorBoock)) { ?> value="<?php echo $txtAuthorBoock; ?>" <?php } else { ?> value="" <?php } ?> id="txtAutor" aria-describedby="emailHelp" required placeholder="Autor">
         </div>
 
         <div class="form-group">
           <label for="img">Imgen: </label>
-          <?php if (isset($image)) {
-            echo "<br/>" . $image;
-          } else {
+          <?php if (isset($image)) { ?>
+            <br />
+            <img class="img-thumbnail rounded" src="../../images/<?php echo $image ?>" width="50">
+          <?php } else {
             print("");
           } ?>
           <input type="file" class="form-control" name="img" id="img" aria-describedby="emailHelp" placeholder="Editorial">
@@ -148,7 +161,12 @@ $boocksDataBase = $selectSentencesBoocks->fetchAll(PDO::FETCH_ASSOC);
                                                                       if ($btnForm == "select") {
                                                                         echo "disabled";
                                                                       }
-                                                                    } ?> class="btn btn-success">Agregar</button> <button type="submit" name="btnForm" value="updateBoock" class="btn btn-warning">Modificar</button>
+                                                                    } ?> class="btn btn-success">Agregar</button>
+          <button type="submit" name="btnForm" value="updateBoock" <?php if (isset($btnForm)) {
+                                                                      if ($btnForm != "select") {
+                                                                        echo "disabled";
+                                                                      }
+                                                                    } ?> class="btn btn-warning">Modificar</button>
           <button type="submit" name="btnForm" value="cancel" class="btn btn-info">Cancelar</button>
         </div>
 
@@ -177,7 +195,10 @@ $boocksDataBase = $selectSentencesBoocks->fetchAll(PDO::FETCH_ASSOC);
           <td><?php print($boock['id_boock']) ?></td>
           <td><?php print($boock['title_boock']) ?></td>
           <td><?php print($boock['author_boock']) ?></td>
-          <td><?php print($boock['image_boock']) ?></td>
+          <td>
+            <img class="img-thumbnail rounded" src="<?php print('../../images/' . $boock['image_boock']) ?>" width="50">
+
+          </td>
           <td class="row">
             <form method="post">
               <input type="hidden" name="txtId" id="txtId" value="<?php echo $boock['id_boock'] ?>" />

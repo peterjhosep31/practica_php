@@ -1,5 +1,13 @@
 <?php
+session_start();
 $url = "http://" . $_SERVER['HTTP_HOST'] . "/practicas";
+if (!isset($_SESSION['user'])) {
+  header('Location:' . $url . '/admin');
+} else {
+  if ($_SESSION['user'] == 'ok') {
+    $nameUser = $_SESSION['nameUser'];
+  }
+}
 ?>
 <!doctype html>
 <html lang="en">

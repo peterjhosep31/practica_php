@@ -1,5 +1,5 @@
 <?php
-  $url = "http://" . $_SERVER['HTTP_HOST'] . "/practicas";
+$url = "http://" . $_SERVER['HTTP_HOST'] . "/practicas";
 ?>
 
 <!doctype html>
@@ -27,6 +27,9 @@
       </li>
       <li class="nav-item active">
         <a class="nav-link" href="#">contact</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="<?php echo $url.'/admin' ?>">Log IN</a>
       </li>
     </ul>
   </nav>
